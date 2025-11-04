@@ -373,8 +373,11 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
       </ul>
     </section>
 
+    
     <section id="glossary" class="card">
-      <h2>Glossary (for this brief)</h2>
+      <h2>Glossary</h2>
+
+      <h3>Core finance & analysis terms (for this brief)</h3>
       <div class="gloss-grid">
         <div class="term"><h4>DoW (Day‑of‑Week)</h4><p>Weekday (Mon–Fri) for each row; used to group/compare returns.</p></div>
         <div class="term"><h4>Regime</h4><p>Market state, e.g., Bull vs Bear via 50‑SMA vs 200‑SMA on the benchmark.</p></div>
@@ -397,7 +400,53 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
         <div class="term"><h4>Stationarity</h4><p>Statistical properties don’t change over time; returns are closer than prices.</p></div>
         <div class="term"><h4>Overfitting</h4><p>Model fits noise; keep parsimonious, validate out‑of‑sample.</p></div>
       </div>
+
+      <h3>Statistics Glossary (what to report for each test)</h3>
+      <p>Pair your <em>hypothesis test</em> with an appropriate <em>effect size</em>, plus a short, manager‑friendly conclusion.</p>
+
+      <h4>ANOVA (one‑way)</h4>
+      <ul>
+        <li><strong>Hypothesis test:</strong> F‑test of mean differences across groups.</li>
+        <li><strong>Effect sizes:</strong> <strong>η²</strong> = SS_between / SS_total; <strong>ω²</strong> ≈ (SS_between − df_between·MS_within) / (SS_total + MS_within). Prefer ω² when sample is modest.</li>
+        <li><strong>Rules of thumb:</strong> small ≈ 0.01, medium ≈ 0.06, large ≈ 0.14.</li>
+        <li><strong>Diagnostics:</strong> residuals ≈ normal; similar variances (Levene); independence.</li>
+      </ul>
+
+      <h4>Chi‑Square (independence)</h4>
+      <ul>
+        <li><strong>Hypothesis test:</strong> <strong>Pearson’s χ²</strong> on a contingency table; H0: variables are independent.</li>
+        <li><strong>Effect size:</strong> <strong>Cramér’s V</strong> = √(χ² / (n·min(r−1,k−1))). For 2×2, <strong>phi (φ)</strong> = √(χ² / n) (equivalent to Cramér’s V).</li>
+        <li><strong>Rules of thumb:</strong> small ≈ 0.10, medium ≈ 0.30, large ≈ 0.50 (context‑dependent; larger tables damp V).</li>
+        <li><strong>Assumptions:</strong> expected counts ≥ 5 in most cells; if violated, collapse categories or use Fisher’s Exact (2×2).</li>
+      </ul>
+
+      <h4>Regression (OLS)</h4>
+      <ul>
+        <li><strong>Hypothesis tests:</strong> coefficient t‑tests (H0: β=0), overall F‑test for the model.</li>
+        <li><strong>Effect sizes / fit:</strong> <strong>R²</strong>, <strong>adjusted R²</strong>; also report <strong>95% CI</strong> for key β’s.</li>
+        <li><strong>Diagnostics:</strong> linearity, independent errors, homoskedasticity, residual normality (QQ‑plot).</li>
+        <li><strong>Note:</strong> On daily returns, small R² is normal; focus on correct inference & reporting.</li>
+      </ul>
+
+      <h4>Copy‑ready code snippets</h4>
+      <pre><code># η² & ω² (one‑way ANOVA)
+anova = sm.stats.anova_lm(model, typ=2)
+SSb = anova.loc['C(Weekday)', 'sum_sq']; SSt = anova['sum_sq'].sum()
+eta2 = SSb / SSt
+MSw = anova.loc['Residual', 'sum_sq'] / anova.loc['Residual', 'df']
+dfb = anova.loc['C(Weekday)', 'df']
+omega2 = (SSb - dfb*MSw) / (SSt + MSw)</code></pre>
+
+      <pre><code># Cramér’s V from Pearson χ²
+chi2, p, dof, exp = st.chi2_contingency(ct)  # ct = observed table
+n = ct.values.sum(); r, k = ct.shape
+cramers_v = (chi2 / (n * (min(r-1, k-1)))) ** 0.5</code></pre>
+
+      <pre><code># 95% CI for a regression coefficient
+m = sm.OLS(y, X).fit()
+m.conf_int().loc['Lag1'].tolist()</code></pre>
     </section>
+
 
     <section class="card">
       <p><em>Reminder:</em> Examples on this page are only examples. You may use them or others — just justify your choices briefly.</p>

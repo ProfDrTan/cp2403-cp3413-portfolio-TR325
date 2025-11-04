@@ -47,6 +47,11 @@
   </style>
 </head>
 <body>
+  <!--UPDATE_BANNER-->
+  <div class="card" style="border:2px solid #ffcc00">
+    <p><strong>IMPORTANT:</strong> This instruction sheet may be updated. <strong>Please check back often</strong> for changes.</p>
+  </div>
+
   <header>
     <h1>CP2403 / CP3413 — Assignment Part 2 <span class="pill pill-blue">Portfolio Analytics Edition</span></h1>
     <p>Weighting: 25% • Trimester: TR3'25 • Due: <strong>End of Week 8 (Sunday, 16 Nov 2025)</strong></p>
@@ -57,6 +62,8 @@
     <section class="card toc">
       <h2>Quick Navigation</h2>
       <div class="grid grid-3">
+      <a href="#quickstart">Quick starter snippets</a>
+      <a href="#hypothesis">Hypothesis Playbook</a>
         <a href="#scenario">Scenario</a>
         <a href="#data">Data Sources & Prep</a>
         <a href="#crash">Finance Crash Course</a>
@@ -66,7 +73,7 @@
         <a href="#viz">Visualisation</a>
         <a href="#submission">Submission & Naming</a>
         <a href="#glossary">Glossary</a>
-        <a href="#starter">Quick Starter Snippets</a>
+        <a href="#quickstart">Quick Starter Snippets</a>
       </div>
     </section>
 
@@ -140,6 +147,113 @@ df.to_csv("prices_3y.csv")</code></pre>
         <p>Report coefficients (α, β’s), standard errors, t‑stats, p‑values, confidence intervals, R² and Adjusted R². Compare models with AIC (or BIC). Beware <em>overfitting</em>; consider a simple train/test split or out‑of‑sample check.</p>
       </details>
     </section>
+
+    <section id="quickstart" class="card">
+      <h2>Quick starter snippets</h2>
+      <p>Copy‑paste these into your notebooks as needed. They align with the Tasks and rubric.</p>
+
+      <h3>Data pull (~36 months with yfinance)</h3>
+      <pre><code>import pandas as pd, yfinance as yf
+TICKER = "QQQ"  # change me
+end = pd.Timestamp.today().normalize()
+start = end - pd.DateOffset(months=36)
+df = yf.download(TICKER, start=start, end=end, interval="1d", auto_adjust=True)[["Close"]].reset_index()
+df = df.sort_values("Date").rename(columns={"Close":"Close"})
+df["Return"] = df["Close"].pct_change()
+df.to_csv("prices_clean.csv", index=False)</code></pre>
+
+      <h3>ANOVA (Task 1) + η²</h3>
+      <pre><code>import pandas as pd, statsmodels.api as sm
+from statsmodels.formula.api import ols
+df = pd.read_csv("prices_clean.csv", parse_dates=["Date"]).sort_values("Date").dropna()
+df["Weekday"] = df["Date"].dt.day_name()
+m = ols("Return ~ C(Weekday)", data=df).fit()
+anova = sm.stats.anova_lm(m, typ=2)
+# eta-squared (η²) = SS_between / SS_total
+eta2 = anova["sum_sq"]["C(Weekday)"] / anova["sum_sq"].sum()
+print(anova, "\neta^2=", eta2)</code></pre>
+
+      <h3>Chi‑Square (Task 2) + Cramér’s V</h3>
+      <pre><code>import pandas as pd, numpy as np, scipy.stats as st
+df = pd.read_csv("prices_clean.csv", parse_dates=["Date"]).sort_values("Date")
+df["UpDown"] = np.where(df["Return"]>0,"UP","DOWN")
+df["Vol20"] = df["Return"].rolling(20).std()
+q = df["Vol20"].quantile([0.33,0.66])
+def reg(v):
+    if pd.isna(v): return None
+    if v<=q.iloc[0]: return "Low"
+    if v<=q.iloc[1]: return "Med"
+    return "High"
+df["Regime"] = df["Vol20"].apply(reg)
+ct = pd.crosstab(df["UpDown"], df["Regime"]).fillna(0)
+chi2, p, dof, exp = st.chi2_contingency(ct)
+n = ct.values.sum()
+phi2 = chi2 / n
+r, k = ct.shape
+cramers_v = (phi2 / max((k-1),(r-1)))**0.5
+print(ct, "\nchi2=",chi2," p=",p," CramerV=",cramers_v)</code></pre>
+
+      <h3>Linear regression (Task 3) + 95% CI</h3>
+      <pre><code>import pandas as pd, statsmodels.api as sm
+df = pd.read_csv("prices_clean.csv", parse_dates=["Date"]).sort_values("Date")
+df["Lag1"] = df["Return"].shift(1)
+d = df.dropna()
+X = sm.add_constant(d["Lag1"]); y = d["Return"]
+m = sm.OLS(y, X).fit()
+print(m.summary())
+print("\n95% CI for beta:", m.conf_int().loc["Lag1"].tolist())</code></pre>
+
+      <h3>Multiple regression (Task 4) — compare specs</h3>
+      <pre><code>import pandas as pd, numpy as np, statsmodels.api as sm
+df = pd.read_csv("prices_clean.csv", parse_dates=["Date"]).sort_values("Date")
+df["Lag1"] = df["Return"].shift(1); df["Lag2"] = df["Return"].shift(2); df["Vol20"] = df["Return"].rolling(20).std()
+d = df.dropna()
+def fit(cols):
+    X = sm.add_constant(d[cols]); y = d["Return"]
+    return sm.OLS(y, X).fit()
+m1 = fit(["Lag1","Lag2"]); m2 = fit(["Lag1","Lag2","Vol20"])
+print("M1:", dict(adjR2=m1.rsquared_adj, AIC=m1.aic, BIC=m1.bic))
+print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
+    </section>
+
+
+    <section id="hypothesis" class="card">
+      <h2>Hypothesis Playbook (use for Tasks 1–2 and wherever relevant)</h2>
+      <details open>
+        <summary>Formulating H0 and H1 (templates)</summary>
+        <ul>
+          <li>Define population/time-frame: “daily returns over the last ~36 months”.</li>
+          <li><strong>Task 1 (ANOVA)</strong> — H0: mean return is the same across all groups; H1: at least one group’s mean differs.</li>
+          <li><strong>Task 2 (Chi‑Square)</strong> — H0: direction (Up/Down) is independent of the factor; H1: they are dependent.</li>
+          <li><strong>Regression</strong> — H0: chosen coefficient = 0; H1: coefficient ≠ 0 (two‑tailed unless justified).</li>
+        </ul>
+      </details>
+      <details open>
+        <summary>Significance level, decision, reporting</summary>
+        <ul>
+          <li>Set α = 0.05 (unless justified).</li>
+          <li>Decision rule: if p ≤ α → reject H0; else fail to reject H0.</li>
+          <li>Always include an effect size and a plain‑English sentence for a manager audience.</li>
+        </ul>
+      </details>
+      <details open>
+        <summary>Effect sizes to include</summary>
+        <ul>
+          <li><strong>ANOVA:</strong> η² (eta‑squared) or ω² (omega‑squared).</li>
+          <li><strong>Chi‑Square:</strong> Cramér’s V.</li>
+          <li><strong>Regression:</strong> R²/Adj‑R² and 95% CI for key coefficients.</li>
+        </ul>
+      </details>
+      <details>
+        <summary>Assumptions checklist</summary>
+        <ul>
+          <li><strong>ANOVA:</strong> approx. normal residuals; similar variances (Levene); independent observations.</li>
+          <li><strong>Chi‑Square:</strong> expected counts ≥ 5 in most cells; mutually exclusive categories.</li>
+          <li><strong>Regression:</strong> linearity, independent errors, homoskedasticity, approx. normal residuals.</li>
+        </ul>
+      </details>
+    </section>
+
 
     <section id="variables" class="card">
       <h2>Variables You Will Construct</h2>
@@ -270,9 +384,11 @@ df.to_csv("prices_3y.csv")</code></pre>
       <p><em>Reminder:</em> Examples on this page are only examples. You may use them or others — just justify your choices briefly.</p>
     </section>
 
-    <footer class="card">
-      <p>© 2025 Professor Dr. Teik Kheong Tan. All rights reserved.</p>
-    </footer>
-  </main>
+    
+<footer class="card" style="margin-top:20px;">
+  <p>&copy; 2025 Professor Dr. Tan. All rights reserved.</p>
+</footer>
+
+</main>
 </body>
 </html>

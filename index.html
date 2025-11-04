@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CP2403 / CP3413 — Assignment Part 2 (Portfolio Analytics Edition, TR3'25)</title>
+  <meta name="description" content="CP2403/CP3413 Assignment Part 2 — Portfolio Analytics Edition (25%, TR3 2025)." />
+  <style>
+    :root{
+      --header:#1f2cf0; --ink:#0f1020; --muted:#5b5e77; --bg:#f7f8ff; --card:#ffffff;
+      --accent:#0ea5e9; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--ink);background:#f7f8ff;}
+    header{background:linear-gradient(90deg,var(--header),#5460ff);color:#fff;padding:28px 20px;}
+    header h1{margin:0;font-size:26px;letter-spacing:.2px}
+    header p{margin:6px 0 0;opacity:.9}
+    main{max-width:1000px;margin:28px auto;padding:0 16px 72px}
+    .card{background:var(--card);border:1px solid #e7e8f5;border-radius:14px;padding:18px;margin:16px 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    h2{margin:28px 0 10px;font-size:22px}
+    h3{margin:22px 0 8px;font-size:18px}
+    code,pre{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#0f172a;color:#e2e8f0;border-radius:8px}
+    code{padding:2px 6px}
+    pre{padding:12px;overflow:auto}
+    .pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;color:#fff}
+    .pill-blue{background:var(--accent)}
+    .pill-green{background:var(--ok)}
+    .muted{color:var(--muted)}
+    .grid{display:grid;gap:12px}
+    @media (min-width:800px){ .grid-2{grid-template-columns:1fr 1fr} .grid-3{grid-template-columns:repeat(3,1fr)} }
+    ul{margin:6px 0 6px 20px}
+    .toc a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--ink);border:1px solid #e7e8f5;margin:6px 0;background:#fff}
+    .toc a:hover{background:#eef2ff}
+    .callout{border-left:4px solid var(--accent);background:#e0f2fe;border-radius:8px;padding:10px 12px}
+    .warn{border-left:4px solid var(--warn);background:#fff7ed}
+    footer{margin-top:48px;color:#6b7280;text-align:center}
+    details{border:1px solid #e7e8f5;border-radius:10px;padding:10px 12px;background:#fff}
+    details summary{cursor:pointer;font-weight:700}
+    .q {margin:6px 0}
+    .q b{display:inline-block; min-width:36px}
+    ol.alpha{list-style: lower-alpha; margin-left: 20px;}
+    .gloss-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width:800px){ .gloss-grid{grid-template-columns:1fr} }
+    .term{padding:10px 12px;border:1px solid #e7e8f5;border-radius:10px;background:#fff}
+    .term h4{margin:0 0 6px;font-size:16px}
+    .term p{margin:0}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CP2403 / CP3413 — Assignment Part 2 <span class="pill pill-blue">Portfolio Analytics Edition</span></h1>
+    <p>Weighting: 25% • Trimester: TR3'25 • Due: <strong>End of Week 8 (Sunday, 16 Nov 2025)</strong></p>
+    <p class="muted">Read everything on this page carefully before you start. The tickers shown are examples — you may use them or others, but state your rationale.</p>
+  </header>
+
+  <main>
+    <section class="card toc">
+      <h2>Quick Navigation</h2>
+      <div class="grid grid-3">
+        <a href="#scenario">Scenario</a>
+        <a href="#data">Data Sources & Prep</a>
+        <a href="#crash">Finance Crash Course</a>
+        <a href="#variables">Constructed Variables</a>
+        <a href="#tasks">Tasks 1–4</a>
+        <a href="#guide">Guiding Questions</a>
+        <a href="#viz">Visualisation</a>
+        <a href="#submission">Submission & Naming</a>
+        <a href="#glossary">Glossary</a>
+        <a href="#starter">Quick Starter Snippets</a>
+      </div>
+    </section>
+
+    <section id="scenario" class="card">
+      <h2>Scenario</h2>
+      <p>Analyse ~36 months of daily market data for a small portfolio (1–3 assets) and one benchmark index. Clean data, build returns, run ANOVA and Chi‑Square tests, and fit linear/multiple regressions to produce concise, decision‑ready conclusions.</p>
+    </section>
+
+    <section id="data" class="card">
+      <h2>Data Sources &amp; Preparation</h2>
+      <h3>Ticker selection rules (to encourage diversity)</h3>
+      <ul>
+        <li>Pick <strong>1–3 assets</strong> you care about — examples: NVDA, AMZN, META, TSLA (examples; you may use these or others).</li>
+        <li>Pick a <strong>benchmark</strong> that fits — examples: <code>^GSPC</code>, <code>^NDX</code>, <code>^STI</code>, futures <code>ES=F</code>, <code>NQ=F</code> (examples; choose what makes sense and justify).</li>
+        <li>In your report, write one sentence per choice: “We chose ___ because ___.”</li>
+      </ul>
+
+      <h3>Path A — Google Sheets (no code)</h3>
+      <ul>
+        <li>Adjusted Close for asset <em>XXX</em>: <code>=GOOGLEFINANCE("XXX","price",TODAY()-1095,TODAY(),"DAILY")</code></li>
+        <li>Volume for <em>XXX</em>: <code>=GOOGLEFINANCE("XXX","volume",TODAY()-1095,TODAY(),"DAILY")</code></li>
+        <li>Benchmark (index) — e.g., <code>^GSPC</code>, <code>^NDX</code>, <code>^STI</code>: <code>=GOOGLEFINANCE("^GSPC","price",TODAY()-1095,TODAY(),"DAILY")</code></li>
+        <li class="muted">Note: Google Sheets generally does <strong>not</strong> provide continuous futures data. For futures, use the Python path below.</li>
+        <li>Export to CSV: <em>File → Download → Comma-separated values (.csv)</em></li>
+      </ul>
+
+      <h3>Path B — Python (yfinance) — recommended for more choices</h3>
+      <pre><code>import yfinance as yf
+assets = ["XXX","YYY"]        # examples: ["NVDA","AMZN","META"]
+bench  = ["^GSPC"]            # examples: ["^GSPC","^NDX","^STI"] or futures ["ES=F","NQ=F"]
+tickers = assets + bench
+df = yf.download(tickers, period="3y", interval="1d", auto_adjust=True).Close
+df.to_csv("prices_3y.csv")</code></pre>
+
+      <div class="callout warn">
+        <strong>Macro drivers (REQUIRED in Task 4 — choose 1–2):</strong>
+        <ul>
+          <li>Volatility proxy: <code>^VIX</code> — use <em>daily % change</em></li>
+          <li>Oil: <code>CL=F</code> (WTI futures) — use <em>daily % return</em></li>
+          <li>Rates: <code>^TNX</code> (10Y yield) — use <em>daily change in yield</em></li>
+          <li>Dollar: DXY proxy (Yahoo symbol varies) — use <em>daily % return</em></li>
+        </ul>
+        <em>Rule:</em> State each proxy and why it’s relevant to your asset.</em>
+      </div>
+
+      <div class="callout">
+        <strong>Pre‑processing note (state this in your report):</strong> how you aligned trading calendars, removed NAs, handled outliers, and ensured consistent date ranges for assets vs benchmark.
+      </div>
+    </section>
+
+    <section id="crash" class="card">
+      <h2>Finance Crash Course (fast, practical)</h2>
+      <details open>
+        <summary>Returns (daily) &amp; why we use them</summary>
+        <p><strong>Return</strong> = % change from one day to the next. Simple return: <code>(P_t - P_{t-1})/P_{t-1}</code>. Returns let us compare different assets fairly and run statistics. <em>Log return</em>: <code>ln(P_t/P_{t-1})</code> — adds better time‑additivity.</p>
+      </details>
+      <details>
+        <summary>Benchmark, α, β (sensitivity)</summary>
+        <p>A <strong>benchmark</strong> is the market yardstick (e.g., <code>^GSPC</code>, <code>^NDX</code>, <code>^STI</code>; futures: <code>ES=F</code>, <code>NQ=F</code>). <strong>β</strong> is slope on the benchmark; <strong>α</strong> is intercept (average return unexplained by the benchmark).</p>
+      </details>
+      <details>
+        <summary>Volatility &amp; clustering</summary>
+        <p>Rolling 20‑day standard deviation as a volatility proxy. Markets show <em>volatility clustering</em>: calm periods, then stormy periods.</p>
+      </details>
+      <details>
+        <summary>ANOVA &amp; Chi‑Square</summary>
+        <p><strong>ANOVA</strong> tests if mean returns differ across groups (assumes similar variances and approx. normal residuals). <strong>Chi‑Square</strong> tests independence; expected counts in each cell should be about ≥5.</p>
+      </details>
+      <details>
+        <summary>Regression essentials</summary>
+        <p>Report coefficients (α, β’s), standard errors, t‑stats, p‑values, confidence intervals, R² and Adjusted R². Compare models with AIC (or BIC). Beware <em>overfitting</em>; consider a simple train/test split or out‑of‑sample check.</p>
+      </details>
+    </section>
+
+    <section id="variables" class="card">
+      <h2>Variables You Will Construct</h2>
+      <ul>
+        <li><strong>Daily return:</strong> <code>(P_t - P_{t-1}) / P_{t-1}</code> or log‑return</li>
+        <li><strong>Up/Down label:</strong> <code>Up</code> if return &gt; 0 else <code>Down</code></li>
+        <li><strong>Day‑of‑Week (DoW):</strong> Monday … Friday</li>
+        <li><strong>Regime:</strong> Bull vs Bear via 50‑SMA vs 200‑SMA</li>
+        <li><strong>Volatility proxy:</strong> rolling 20‑day stdev of returns</li>
+        <li><strong>Momentum:</strong> prior 20‑day return</li>
+        <li><strong>Volume z‑score:</strong> (Volume − mean)/stdev across a rolling window</li>
+      </ul>
+    </section>
+
+    <section id="tasks" class="card">
+      <h2>Tasks</h2>
+      <h3>Task 1 — ANOVA <span class="pill pill-green">Module 5</span></h3>
+      <ul>
+        <li><em>Factor (choose one):</em> Day‑of‑Week; or Regime (benchmark 50‑SMA above/below 200‑SMA); or Volatility terciles.</li>
+        <li><em>Response:</em> Daily return of one chosen asset.</li>
+        <li><em>Deliverables:</em> ANOVA table, diagnostics, 1‑paragraph investor takeaway.</li>
+      </ul>
+
+      <h3>Task 2 — Chi‑Square (Independence) <span class="pill pill-green">Module 6</span></h3>
+      <ul>
+        <li>Is Up/Down independent of Day‑of‑Week (or Regime)? Provide contingency table, expected counts, χ² & p‑value; interpret.</li>
+      </ul>
+
+      <h3>Task 3 — Simple Linear Regression <span class="pill pill-green">Module 7</span></h3>
+      <ul>
+        <li>Model: <code>AssetReturn = α + β × BenchmarkReturn + ε</code>. Report α, β, R²; check residuals; explain β (sensitivity).</li>
+        <li><em>Benchmark examples:</em> <code>^GSPC</code>, <code>^NDX</code>, <code>^STI</code>, <code>ES=F</code>, <code>NQ=F</code>.</li>
+      </ul>
+
+      <h3>Task 4 — Multiple Regression (REQUIRES 1–2 macro drivers) <span class="pill pill-green">Modules 7–8</span></h3>
+      <ul>
+        <li><em>Response:</em> Portfolio return (equal‑weight of your assets) or a single asset.</li>
+        <li><em>Predictors:</em> Benchmark return <strong>plus 1–2 macro drivers</strong> chosen from the list in <a href="#data">Data</a> (ΔVIX, oil return, Δ10Y, USD return).</li>
+        <li>Fit ≥3 model variants; select “best” via R²/Adj‑R²/AIC; justify choice; write a short manager memo.</li>
+      </ul>
+    </section>
+
+    <section id="guide" class="card">
+      <h2>Guiding Questions (submit answers in a Word file)</h2>
+      <p><em>Answer these Q1–Q14 succinctly in a Word document; name it per the convention below.</em></p>
+      <ol class="alpha">
+        <li><strong>Choice & rationale</strong>
+          <div class="q"><b>Q1.</b> Which assets (1–3) did you pick and why are they economically related?</div>
+          <div class="q"><b>Q2.</b> Which benchmark fits best and why not the alternatives listed?</div>
+        </li>
+        <li><strong>Data hygiene</strong>
+          <div class="q"><b>Q3.</b> Show how you aligned dates and removed NAs when assets/benchmarks had different trading days.</div>
+          <div class="q"><b>Q4.</b> Did you use returns/changes (not levels) for regressions? Show one row example.</div>
+        </li>
+        <li><strong>Task 1 — ANOVA</strong>
+          <div class="q"><b>Q5.</b> Which factor did you choose (DoW, Regime, or Vol‑terciles) and why is it sensible for your asset?</div>
+          <div class="q"><b>Q6.</b> What does the ANOVA say and what is the single‑sentence “so what?”</div>
+        </li>
+        <li><strong>Task 2 — Chi‑Square</strong>
+          <div class="q"><b>Q7.</b> Build the Up/Down vs chosen factor table. Are counts adequate in each cell?</div>
+          <div class="q"><b>Q8.</b> What does χ² and the p‑value tell you? State your interpretation.</div>
+        </li>
+        <li><strong>Task 3 — Simple regression</strong>
+          <div class="q"><b>Q9.</b> What are α, β, and R²? Provide a one‑sentence PM interpretation for β and R².</div>
+          <div class="q"><b>Q10.</b> Show one diagnostic (residual plot or normal QQ) and comment.</div>
+        </li>
+        <li><strong>Task 4 — Multiple regression (REQUIRES 1–2 macros)</strong>
+          <div class="q"><b>Q11.</b> Which macro drivers did you choose (ΔVIX, oil return, Δ10Y, USD return) and why do they matter for your assets?</div>
+          <div class="q"><b>Q12.</b> Compare three model variants (benchmark‑only vs +macro1 vs +macro1+macro2). Which wins and why (R²/Adj‑R²/AIC)?</div>
+          <div class="q"><b>Q13.</b> What would change your conclusion (regime change, out‑of‑sample check)?</div>
+        </li>
+        <li><strong>Communication</strong>
+          <div class="q"><b>Q14.</b> What’s your final manager memo (3–4 bullets) that a non‑technical audience can use?</div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="viz" class="card">
+      <h2>Visualisation Requirements</h2>
+      <ul>
+        <li>Task 1: box/violin + mean markers per group</li>
+        <li>Task 2: stacked bar or mosaic plot</li>
+        <li>Task 3: scatter with fitted line + residual plot</li>
+        <li>Task 4: coefficient table/plot + residual diagnostics</li>
+      </ul>
+      <p class="muted">Always label axes/legends with tickers, units, and date range.</p>
+    </section>
+
+    <section id="submission" class="card">
+      <h2>Submission &amp; Naming</h2>
+      <p>Submit to LearnJCU. Include your CSV(s) used. If you hosted data on GitHub (optional), paste the CSV link into your Word file for reproducibility. <strong>Deliverables:</strong></p>
+      <ul>
+        <li><strong>Word (answers):</strong> responses to Q1–Q14 — name: <code>task-answers-FirstNameLastName-StudentID.docx</code></li>
+        <li><strong>Task 1:</strong> <code>task1-ANOVA-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
+        <li><strong>Task 2:</strong> <code>task2-ChiSquare-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
+        <li><strong>Task 3:</strong> <code>task3-LinearReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
+        <li><strong>Task 4:</strong> <code>task4-MultipleReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
+      </ul>
+    </section>
+
+    <section id="glossary" class="card">
+      <h2>Glossary (for this brief)</h2>
+      <div class="gloss-grid">
+        <div class="term"><h4>DoW (Day‑of‑Week)</h4><p>Weekday (Mon–Fri) for each row; used to group/compare returns.</p></div>
+        <div class="term"><h4>Regime</h4><p>Market state, e.g., Bull vs Bear via 50‑SMA vs 200‑SMA on the benchmark.</p></div>
+        <div class="term"><h4>Remove NAs</h4><p>Drop/fill rows with missing values after aligning dates across tickers.</p></div>
+        <div class="term"><h4>Return vs Log‑return</h4><p>Simple: (Pₜ − Pₜ₋₁)/Pₜ₋₁; Log: ln(Pₜ/Pₜ₋₁) — additive over time.</p></div>
+        <div class="term"><h4>α (Alpha)</h4><p>Intercept: average return unexplained by the benchmark; daily units.</p></div>
+        <div class="term"><h4>β (Beta)</h4><p>Sensitivity to the benchmark; slope of asset on benchmark returns.</p></div>
+        <div class="term"><h4>Residuals</h4><p>Errors (actual − fitted). Random residuals suggest model adequacy.</p></div>
+        <div class="term"><h4>Heteroskedasticity</h4><p>Residual variance changes with level/fitted value (fan‑shape in plots).</p></div>
+        <div class="term"><h4>Autocorrelation</h4><p>Residuals correlated over time; check with Durbin‑Watson or ACF plot.</p></div>
+        <div class="term"><h4>Multicollinearity</h4><p>Predictors highly correlated; inflates SEs. Check VIFs; drop/transform.</p></div>
+        <div class="term"><h4>R² / Adjusted R²</h4><p>Explained variance; adjusted penalises extra predictors.</p></div>
+        <div class="term"><h4>AIC / BIC</h4><p>Model scores that penalise complexity; lower is better (same data).</p></div>
+        <div class="term"><h4>t‑stat / p‑value</h4><p>Signal‑to‑noise and its significance probability for a coefficient.</p></div>
+        <div class="term"><h4>Confidence Interval</h4><p>Range that plausibly contains the true coefficient value (e.g., 95%).</p></div>
+        <div class="term"><h4>QQ Plot</h4><p>Graph to assess if residuals are approximately normal.</p></div>
+        <div class="term"><h4>Leverage & Influence</h4><p>Points that can sway the fit; inspect Cook’s distance.</p></div>
+        <div class="term"><h4>Standardisation</h4><p>Scale variables (z‑score) for comparability of coefficients.</p></div>
+        <div class="term"><h4>Winsorise / Outliers</h4><p>Cap extreme values to reduce undue influence; report if used.</p></div>
+        <div class="term"><h4>Stationarity</h4><p>Statistical properties don’t change over time; returns are closer than prices.</p></div>
+        <div class="term"><h4>Overfitting</h4><p>Model fits noise; keep parsimonious, validate out‑of‑sample.</p></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <p><em>Reminder:</em> Examples on this page are only examples. You may use them or others — just justify your choices briefly.</p>
+    </section>
+
+    <footer class="card">
+      <p>© 2025 Professor Dr. Teik Kheong Tan. All rights reserved.</p>
+    </footer>
+  </main>
+</body>
+</html>

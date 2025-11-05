@@ -7,7 +7,7 @@
   <meta name="description" content="CP2403/CP3413 Assignment Part 2 — Portfolio Analytics Edition (25%, TR3 2025)." />
   <style>
     :root{
-      --header:#1f2cf0; --ink:#0f1020; --muted:#5b5e77; --bg:#f7f8ff; --card:#ffffff;
+      --header:#1f2cf0; --ink:#0f1020; --muted:#374151; --bg:#f7f8ff; --card:#ffffff;
       --accent:#0ea5e9; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
     }
     *{box-sizing:border-box;}
@@ -18,10 +18,10 @@
     main{max-width:1000px;margin:28px auto;padding:0 16px 72px}
     .card{background:var(--card);border:1px solid #e7e8f5;border-radius:14px;padding:18px;margin:16px 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
     h2{margin:28px 0 10px;font-size:22px}
-    h3{margin:22px 0 8px;font-size:18px}
-    code,pre{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#0f172a;color:#e2e8f0;border-radius:8px}
+    h3{margin:22px 0 8px;font-size:18px;color:#0b1020}
+    code,pre{font:14px/1.55 Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;background:#f8fafc;color:#111827;border-radius:8px}
     code{padding:2px 6px}
-    pre{padding:12px;overflow:auto}
+    pre{padding:14px;overflow:auto;border:1px solid #e5e7eb}
     .pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;color:#fff}
     .pill-blue{background:var(--accent)}
     .pill-green{background:var(--ok)}
@@ -44,12 +44,26 @@
     .term{padding:10px 12px;border:1px solid #e7e8f5;border-radius:10px;background:#fff}
     .term h4{margin:0 0 6px;font-size:16px}
     .term p{margin:0}
+
+    details{background:#fff; opacity: 1;}
+    details[open] { background:#ffffff; }
+    details summary { font-weight:700; color: var(--ink); }
+
+
+    /* Force high-contrast text for all content areas */
+    .card, .card p, .card li, .card ul, .card ol, .card h2, .card h3, .card h4, .card details, .card details * {
+      color: var(--ink) !important;
+      opacity: 1 !important;
+    }
+    /* Keep code blocks in dark theme */
+    
+
   </style>
 </head>
 <body>
   <!--UPDATE_BANNER-->
   <div class="card" style="border:2px solid #ffcc00">
-    <p><strong>IMPORTANT:</strong> This instruction sheet may be updated. <strong>Please check back often</strong> for changes.</p>
+    <p><strong>IMPORTANT:</strong> Updated on 2025-11-05 02:38. <strong>Please check back often</strong> for changes.</p>
   </div>
 
   <header>
@@ -68,7 +82,7 @@
         <a href="#data">Data Sources & Prep</a>
         <a href="#crash">Finance Crash Course</a>
         <a href="#variables">Constructed Variables</a>
-        <a href="#tasks">Tasks 1–4</a>
+        <a href="#tasks">Tasks 1–6</a>
         <a href="#guide">Guiding Questions</a>
         <a href="#viz">Visualisation</a>
         <a href="#submission">Submission & Naming</a>
@@ -160,7 +174,7 @@ df.to_csv("prices_3y.csv")</code></pre>
       <h3>What you’ll take away</h3>
       <ul>
         <li>A reproducible Python workflow to pull, clean, and analyse real market data.</li>
-        <li>Confidence in hypothesis testing (ANOVA, Chi‑Square, regression) and how to report decisions with effect sizes.</li>
+        <li>Confidence in hypothesis testing (ANOVA, Chi‑Square, regression) and how to report decisions responsibly.</li>
         <li>A personal playbook for evaluating claims: “Is this statistically meaningful or just noise?”</li>
       </ul>
       <p><em>Treat this like a starter kit for your future self.</em> The sooner you build these habits, the more time compounding has to work for you.</p>
@@ -181,7 +195,7 @@ df = df.sort_values("Date").rename(columns={"Close":"Close"})
 df["Return"] = df["Close"].pct_change()
 df.to_csv("prices_clean.csv", index=False)</code></pre>
 
-      <h3>ANOVA (Task 1) + η²</h3>
+      <h3>ANOVA (Task 1)</h3>
       <pre><code>import pandas as pd, statsmodels.api as sm
 from statsmodels.formula.api import ols
 df = pd.read_csv("prices_clean.csv", parse_dates=["Date"]).sort_values("Date").dropna()
@@ -190,9 +204,8 @@ m = ols("Return ~ C(Weekday)", data=df).fit()
 anova = sm.stats.anova_lm(m, typ=2)
 # eta-squared (η²) = SS_between / SS_total
 eta2 = anova["sum_sq"]["C(Weekday)"] / anova["sum_sq"].sum()
-print(anova, "\neta^2=", eta2)</code></pre>
-
-      <h3>Chi‑Square (Task 2) + Cramér’s V</h3>
+print(anova, "\n
+      <h3>Chi‑Square (Task 2)</h3>
       <pre><code>import pandas as pd, numpy as np, scipy.stats as st
 df = pd.read_csv("prices_clean.csv", parse_dates=["Date"]).sort_values("Date")
 df["UpDown"] = np.where(df["Return"]>0,"UP","DOWN")
@@ -209,7 +222,6 @@ chi2, p, dof, exp = st.chi2_contingency(ct)
 n = ct.values.sum()
 phi2 = chi2 / n
 r, k = ct.shape
-cramers_v = (phi2 / max((k-1),(r-1)))**0.5
 print(ct, "\nchi2=",chi2," p=",p," CramerV=",cramers_v)</code></pre>
 
       <h3>Linear regression (Task 3) + 95% CI</h3>
@@ -233,6 +245,32 @@ def fit(cols):
 m1 = fit(["Lag1","Lag2"]); m2 = fit(["Lag1","Lag2","Vol20"])
 print("M1:", dict(adjR2=m1.rsquared_adj, AIC=m1.aic, BIC=m1.bic))
 print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
+    
+      <h3>Polynomial regression (Task 5) — degree 2 (keep it simple)</h3>
+      <pre><code>import pandas as pd, statsmodels.api as sm
+df = pd.read_csv("prices_clean.csv", parse_dates=["Date"]).dropna().sort_values("Date")
+# Predict asset return using a quadratic of benchmark return
+df["BenchRet"] = df["Return"].shift(0)  # or use benchmark return if you merged it
+X = pd.DataFrame({"BenchRet": df["BenchRet"], "BenchRet2": df["BenchRet"]**2}).dropna()
+y = df.loc[X.index, "Return"]
+X = sm.add_constant(X)
+m = sm.OLS(y, X).fit()
+print(m.summary())</code></pre>
+
+      <h3>Logistic regression (Task 6) — classify Up vs Down</h3>
+      <pre><code>import pandas as pd, numpy as np, statsmodels.api as sm
+df = pd.read_csv("prices_clean.csv", parse_dates=["Date"]).sort_values("Date")
+df["Up"] = (df["Return"] &gt; 0).astype(int)
+df["Lag1"] = df["Return"].shift(1)
+d = df.dropna(subset=["Up","Lag1"])
+X = sm.add_constant(d[["Lag1"]])  # you may add one macro predictor if available
+y = d["Up"]
+logit = sm.Logit(y, X).fit(disp=False)
+print(logit.summary())
+pred = (logit.predict(X) &gt;= 0.5).astype(int)
+acc = (pred == y).mean()
+print("Accuracy:", round(float(acc),3))</code></pre>
+
     </section>
 
 
@@ -252,15 +290,15 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
         <ul>
           <li>Set α = 0.05 (unless justified).</li>
           <li>Decision rule: if p ≤ α → reject H0; else fail to reject H0.</li>
-          <li>Always include an effect size and a plain‑English sentence for a manager audience.</li>
+          <li>Provide the relevant test statistic(s), p‑value(s), and a plain‑English sentence for a manager audience. (Effect sizes are not required for Part 2.)</li>
         </ul>
       </details>
-      <details open>
-        <summary>Effect sizes to include</summary>
+      <details>
+        <summary>Logistic regression (classification) notes</summary>
         <ul>
-          <li><strong>ANOVA:</strong> η² (eta‑squared) or ω² (omega‑squared).</li>
-          <li><strong>Chi‑Square:</strong> Cramér’s V.</li>
-          <li><strong>Regression:</strong> R²/Adj‑R² and 95% CI for key coefficients.</li>
+          <li>Outcome: Up (1) vs Down (0). Predictors: e.g., Lag1 return (and optionally one macro).</li>
+          <li>Report coefficient signs and a simple performance metric (e.g., accuracy). No ROC/AUC required.</li>
+          <li>Watch for class imbalance; if heavily imbalanced, note it briefly.</li>
         </ul>
       </details>
       <details>
@@ -284,6 +322,8 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
         <li><strong>Volatility proxy:</strong> rolling 20‑day stdev of returns</li>
         <li><strong>Momentum:</strong> prior 20‑day return</li>
         <li><strong>Volume z‑score:</strong> (Volume − mean)/stdev across a rolling window</li>
+      <li><strong>Task 5:</strong> <code>task5-PolynomialReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
+        <li><strong>Task 6:</strong> <code>task6-LogisticReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
       </ul>
     </section>
 
@@ -313,6 +353,26 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
         <li><em>Predictors:</em> Benchmark return <strong>plus 1–2 macro drivers</strong> chosen from the list in <a href="#data">Data</a> (ΔVIX, oil return, Δ10Y, USD return).</li>
         <li>Fit ≥3 model variants; select “best” via R²/Adj‑R²/AIC; justify choice; write a short manager memo.</li>
       </ul>
+    
+      <h3>Task 5 — Polynomial Regression (degree 2) <span class="pill pill-green">Module 9</span></h3>
+      <ul>
+        <li>Augment a simple regression with a quadratic term (degree 2) to capture mild curvature.</li>
+        <li><em>Model:</em> Return = α + β₁·Benchmark + β₂·Benchmark² + ε (keep predictors minimal).</li>
+        <li><em>Deliverables:</em> coefficients, p‑values, R²/Adj‑R², and a chart overlaying the fitted curve on the scatter.</li>
+      </ul>
+
+      <h3>Task 6 — Logistic Regression (Up vs Down) <span class="pill pill-green">Module 10</span></h3>
+      <ul>
+        <li>Classify daily direction (Up=1, Down=0) using a simple logistic model.</li>
+        <li><em>Predictors:</em> Lag1 return (and optionally one macro driver). Keep it simple.</li>
+        <li><em>Deliverables:</em> coefficient signs, a confusion matrix (2×2), and accuracy. No ROC/AUC required.</li>
+      </ul>
+
+      <div class="callout">
+        <strong>Weighting & Marks:</strong> Internal 100-point rubric maps to 25% course weight.<br/>
+        T1–T4: 20 pts each (5% each). T5–T6: 10 pts each (2.5% each). Optional Bonus: up to +5 pts (does not exceed 100/25%).
+      </div>
+
     </section>
 
     <section id="guide" class="card">
@@ -344,6 +404,14 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
           <div class="q"><b>Q12.</b> Compare three model variants (benchmark‑only vs +macro1 vs +macro1+macro2). Which wins and why (R²/Adj‑R²/AIC)?</div>
           <div class="q"><b>Q13.</b> What would change your conclusion (regime change, out‑of‑sample check)?</div>
         </li>
+        <li><strong>Task 5 — Polynomial regression</strong>
+          <div class="q"><b>Q15.</b> Why is a quadratic term plausible for your asset/benchmark relation? Show the fitted curve.</div>
+          <div class="q"><b>Q16.</b> Did the quadratic term materially improve Adj‑R² or AIC? Briefly justify.</div>
+        </li>
+        <li><strong>Task 6 — Logistic regression</strong>
+          <div class="q"><b>Q17.</b> What predictors did you use and why? Report the confusion matrix and accuracy.</div>
+          <div class="q"><b>Q18.</b> How would misclassification risk affect a simple trading decision?</div>
+        </li>
         <li><strong>Communication</strong>
           <div class="q"><b>Q14.</b> What’s your final manager memo (3–4 bullets) that a non‑technical audience can use?</div>
         </li>
@@ -357,6 +425,8 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
         <li>Task 2: stacked bar or mosaic plot</li>
         <li>Task 3: scatter with fitted line + residual plot</li>
         <li>Task 4: coefficient table/plot + residual diagnostics</li>
+      <li>Task 5: scatter with quadratic fitted curve</li>
+        <li>Task 6: small confusion matrix table (or bar of correct vs incorrect)</li>
       </ul>
       <p class="muted">Always label axes/legends with tickers, units, and date range.</p>
     </section>
@@ -370,6 +440,8 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
         <li><strong>Task 2:</strong> <code>task2-ChiSquare-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
         <li><strong>Task 3:</strong> <code>task3-LinearReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
         <li><strong>Task 4:</strong> <code>task4-MultipleReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
+      <li><strong>Task 5:</strong> <code>task5-PolynomialReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
+        <li><strong>Task 6:</strong> <code>task6-LogisticReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
       </ul>
     </section>
 
@@ -402,50 +474,16 @@ print("M2:", dict(adjR2=m2.rsquared_adj, AIC=m2.aic, BIC=m2.bic))</code></pre>
       </div>
 
       <h3>Statistics Glossary (what to report for each test)</h3>
-      <p>Pair your <em>hypothesis test</em> with an appropriate <em>effect size</em>, plus a short, manager‑friendly conclusion.</p>
+      <p>Report the key test statistic(s), p‑value(s), fit metrics where relevant, and a short, manager‑friendly conclusion. Effect sizes are not required for Part 2.</p>
 
-      <h4>ANOVA (one‑way)</h4>
-      <ul>
-        <li><strong>Hypothesis test:</strong> F‑test of mean differences across groups.</li>
-        <li><strong>Effect sizes:</strong> <strong>η²</strong> = SS_between / SS_total; <strong>ω²</strong> ≈ (SS_between − df_between·MS_within) / (SS_total + MS_within). Prefer ω² when sample is modest.</li>
-        <li><strong>Rules of thumb:</strong> small ≈ 0.01, medium ≈ 0.06, large ≈ 0.14.</li>
-        <li><strong>Diagnostics:</strong> residuals ≈ normal; similar variances (Levene); independence.</li>
-      </ul>
+      <h4>ANOVA (one‑way)</h4><ul><li><strong>Hypothesis test:</strong> F‑test of mean differences across groups.</li><li><strong>Report:</strong> F‑statistic, p‑value, brief interpretation; include basic diagnostics (residuals, variance similarity).</li></ul>
 
-      <h4>Chi‑Square (independence)</h4>
-      <ul>
-        <li><strong>Hypothesis test:</strong> <strong>Pearson’s χ²</strong> on a contingency table; H0: variables are independent.</li>
-        <li><strong>Effect size:</strong> <strong>Cramér’s V</strong> = √(χ² / (n·min(r−1,k−1))). For 2×2, <strong>phi (φ)</strong> = √(χ² / n) (equivalent to Cramér’s V).</li>
-        <li><strong>Rules of thumb:</strong> small ≈ 0.10, medium ≈ 0.30, large ≈ 0.50 (context‑dependent; larger tables damp V).</li>
-        <li><strong>Assumptions:</strong> expected counts ≥ 5 in most cells; if violated, collapse categories or use Fisher’s Exact (2×2).</li>
-      </ul>
+      <h4>Chi‑Square (independence)</h4><ul><li><strong>Hypothesis test:</strong> Pearson’s χ² on a contingency table; H0: variables are independent.</li><li><strong>Report:</strong> contingency table, χ², p‑value, and a 1–2 sentence interpretation; ensure expected counts are adequate.</li></ul>
 
-      <h4>Regression (OLS)</h4>
-      <ul>
-        <li><strong>Hypothesis tests:</strong> coefficient t‑tests (H0: β=0), overall F‑test for the model.</li>
-        <li><strong>Effect sizes / fit:</strong> <strong>R²</strong>, <strong>adjusted R²</strong>; also report <strong>95% CI</strong> for key β’s.</li>
-        <li><strong>Diagnostics:</strong> linearity, independent errors, homoskedasticity, residual normality (QQ‑plot).</li>
-        <li><strong>Note:</strong> On daily returns, small R² is normal; focus on correct inference & reporting.</li>
-      </ul>
+      <h4>Regression (OLS)</h4><ul><li><strong>Hypothesis tests:</strong> coefficient t‑tests (H0: β=0), overall F‑test.</li><li><strong>Report:</strong> coefficients, standard errors, t‑stats, p‑values, R²/Adj‑R², 95% CI for key β’s.</li><li><strong>Diagnostics:</strong> linearity, homoskedasticity, residual normality (QQ‑plot).</li></ul>
 
       <h4>Copy‑ready code snippets</h4>
-      <pre><code># η² & ω² (one‑way ANOVA)
-anova = sm.stats.anova_lm(model, typ=2)
-SSb = anova.loc['C(Weekday)', 'sum_sq']; SSt = anova['sum_sq'].sum()
-eta2 = SSb / SSt
-MSw = anova.loc['Residual', 'sum_sq'] / anova.loc['Residual', 'df']
-dfb = anova.loc['C(Weekday)', 'df']
-omega2 = (SSb - dfb*MSw) / (SSt + MSw)</code></pre>
-
-      <pre><code># Cramér’s V from Pearson χ²
-chi2, p, dof, exp = st.chi2_contingency(ct)  # ct = observed table
-n = ct.values.sum(); r, k = ct.shape
-cramers_v = (chi2 / (n * (min(r-1, k-1)))) ** 0.5</code></pre>
-
-      <pre><code># 95% CI for a regression coefficient
-m = sm.OLS(y, X).fit()
-m.conf_int().loc['Lag1'].tolist()</code></pre>
-    </section>
+      </section>
 
 
     <section class="card">
@@ -457,6 +495,25 @@ m.conf_int().loc['Lag1'].tolist()</code></pre>
   <p>&copy; 2025 Professor Dr. Tan. All rights reserved.</p>
 </footer>
 
+
+    <section id="bonus" class="card">
+      <h2>Bonus Exploration (Optional, up to +5 pts)</h2>
+      <p>Advanced measures not required in Weeks 5–10. Attempt only if you wish to go beyond core requirements.</p>
+      <ul>
+        <li>For χ², compute and discuss Cramér’s V.</li>
+        <li>For ANOVA, compute and discuss η² or ω².</li>
+        <li>For logistic, explore a ROC/AUC sketch or threshold tuning. (Optional)</li>
+      </ul>
+      <p class="muted">Bonus points cannot push total above the Part 2 maximum (25%).</p>
+    </section>
+
 </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      document.querySelectorAll('details').forEach(d => d.open = true);
+    });
+  </script>
+
 </body>
 </html>

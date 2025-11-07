@@ -49,7 +49,6 @@
     details[open] { background:#ffffff; }
     details summary { font-weight:700; color: var(--ink); }
 
-
     /* Force high-contrast text for all content areas */
     .card, .card p, .card li, .card ul, .card ol, .card h2, .card h3, .card h4, .card details, .card details * {
       color: var(--ink) !important;
@@ -63,7 +62,7 @@
 <body>
   <!--UPDATE_BANNER-->
   <div class="card" style="border:2px solid #ffcc00">
-    <p><strong>IMPORTANT:</strong> Updated on 2025-11-05 02:38. <strong>Please check back often</strong> for changes.</p>
+    <p><strong>IMPORTANT:</strong> Updated on 2025-11-07 21:37. Please check back often for changes.</p>
   </div>
 
   <header>
@@ -88,6 +87,7 @@
         <a href="#submission">Submission & Naming</a>
         <a href="#glossary">Glossary</a>
         <a href="#quickstart">Quick starter snippets</a>
+              <a href="#delivery-template">Delivery Template</a>
       </div>
     </section>
 
@@ -98,10 +98,16 @@
 
     <section id="data" class="card">
       <h2>Data Sources &amp; Preparation</h2>
+      <div class="callout warn">
+        <strong>Update (Nov 2025):</strong>
+        <p>Deprecated caret-index symbols (e.g., ^GSPC, ^NDX, ^STI) and futures tickers have been removed to avoid data issues. Use ETF benchmarks instead — SPY (S&P 500), QQQ (NASDAQ‑100), and IWM (Russell 2000).<code>SPY</code> (S&amp;P 500), <code>QQQ</code> (NASDAQ‑100), and <code>IWM</code> (Russell 2000). 
+        Google Sheets and yfinance fully support these.</p>
+      </div>
+
       <h3>Ticker selection rules (to encourage diversity)</h3>
       <ul>
         <li>Pick <strong>1–3 assets</strong> you care about — examples: NVDA, AMZN, META, TSLA (examples; you may use these or others).</li>
-        <li>Pick a <strong>benchmark</strong> that fits — examples: <code>^GSPC</code>, <code>^NDX</code>, <code>^STI</code>, futures <code>ES=F</code>, <code>NQ=F</code> (examples; choose what makes sense and justify).</li>
+        <li>Pick a <strong>benchmark</strong> that fits — examples: <code>SPY</code>, <code>QQQ</code>, (examples; choose what makes sense and justify).</li>
         <li>In your report, write one sentence per choice: “We chose ___ because ___.”</li>
       </ul>
 
@@ -109,15 +115,15 @@
       <ul>
         <li>Adjusted Close for asset <em>XXX</em>: <code>=GOOGLEFINANCE("XXX","price",TODAY()-1095,TODAY(),"DAILY")</code></li>
         <li>Volume for <em>XXX</em>: <code>=GOOGLEFINANCE("XXX","volume",TODAY()-1095,TODAY(),"DAILY")</code></li>
-        <li>Benchmark (index) — e.g., <code>^GSPC</code>, <code>^NDX</code>, <code>^STI</code>: <code>=GOOGLEFINANCE("^GSPC","price",TODAY()-1095,TODAY(),"DAILY")</code></li>
-        <li class="muted">Note: Google Sheets generally does <strong>not</strong> provide continuous futures data. For futures, use the Python path below.</li>
+        <li>Benchmark (index) — e.g., <code>SPY</code>, <code>QQQ</code>, <code>IWM</code>: <code>=GOOGLEFINANCE("SPY","price",TODAY()-1095,TODAY(),"DAILY")</code></li>
+        
         <li>Export to CSV: <em>File → Download → Comma-separated values (.csv)</em></li>
       </ul>
 
       <h3>Path B — Python (yfinance) — recommended for more choices</h3>
       <pre><code>import yfinance as yf
 assets = ["XXX","YYY"]        # examples: ["NVDA","AMZN","META"]
-bench  = ["^GSPC"]            # examples: ["^GSPC","^NDX","^STI"] or futures ["ES=F","NQ=F"]
+bench  = ["SPY"]            # examples: ["SPY","QQQ","STI"] or futures ["ES=F","NQ=F"]
 tickers = assets + bench
 df = yf.download(tickers, period="3y", interval="1d", auto_adjust=True).Close
 df.to_csv("prices_3y.csv")</code></pre>
@@ -125,10 +131,10 @@ df.to_csv("prices_3y.csv")</code></pre>
       <div class="callout warn">
         <strong>Macro drivers (REQUIRED in Task 4 — choose 1–2):</strong>
         <ul>
-          <li>Volatility proxy: <code>^VIX</code> — use <em>daily % change</em></li>
-          <li>Oil: <code>CL=F</code> (WTI futures) — use <em>daily % return</em></li>
-          <li>Rates: <code>^TNX</code> (10Y yield) — use <em>daily change in yield</em></li>
-          <li>Dollar: DXY proxy (Yahoo symbol varies) — use <em>daily % return</em></li>
+          <li>Volatility proxy: <code>VIXY</code> (ETF) — use <em>daily % change</em></li>
+          <li>Oil: (WTI futures) — use <em>daily % return</em></li>
+          <li>Rates proxy: <code>IEF</code> (7–10Y US Treasuries ETF) — use <em>daily % return</em></li>
+          <li>Dollar proxy: <code>UUP</code> (USD ETF) — use <em>daily % return</em></li>
         </ul>
         <em>Rule:</em> State each proxy and why it’s relevant to your asset.</em>
       </div>
@@ -146,7 +152,7 @@ df.to_csv("prices_3y.csv")</code></pre>
       </details>
       <details>
         <summary>Benchmark, α, β (sensitivity)</summary>
-        <p>A <strong>benchmark</strong> is the market yardstick (e.g., <code>^GSPC</code>, <code>^NDX</code>, <code>^STI</code>; futures: <code>ES=F</code>, <code>NQ=F</code>). <strong>β</strong> is slope on the benchmark; <strong>α</strong> is intercept (average return unexplained by the benchmark).</p>
+        <p>A <strong>benchmark</strong> is the market yardstick (e.g., <code>SPY</code>, <code>QQQ</code>; futures:). <strong>β</strong> is slope on the benchmark; <strong>α</strong> is intercept (average return unexplained by the benchmark).</p>
       </details>
       <details>
         <summary>Volatility &amp; clustering</summary>
@@ -179,7 +185,6 @@ df.to_csv("prices_3y.csv")</code></pre>
       </ul>
       <p><em>Treat this like a starter kit for your future self.</em> The sooner you build these habits, the more time compounding has to work for you.</p>
     </section>
-
 
     <section id="quickstart" class="card">
       <h2>Quick starter snippets</h2>
@@ -273,7 +278,6 @@ print("Accuracy:", round(float(acc),3))</code></pre>
 
     </section>
 
-
     <section id="hypothesis" class="card">
       <h2>Hypothesis Playbook (use for Tasks 1–2 and wherever relevant)</h2>
       <details open>
@@ -311,7 +315,6 @@ print("Accuracy:", round(float(acc),3))</code></pre>
       </details>
     </section>
 
-
     <section id="variables" class="card">
       <h2>Variables You Will Construct</h2>
       <ul>
@@ -322,8 +325,7 @@ print("Accuracy:", round(float(acc),3))</code></pre>
         <li><strong>Volatility proxy:</strong> rolling 20‑day stdev of returns</li>
         <li><strong>Momentum:</strong> prior 20‑day return</li>
         <li><strong>Volume z‑score:</strong> (Volume − mean)/stdev across a rolling window</li>
-      <li><strong>Task 5:</strong> <code>task5-PolynomialReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
-        <li><strong>Task 6:</strong> <code>task6-LogisticReg-FirstNameLastName-StudentID.docx</code> (and <code>...ipynb</code> if used)</li>
+      
       </ul>
     </section>
 
@@ -344,7 +346,7 @@ print("Accuracy:", round(float(acc),3))</code></pre>
       <h3>Task 3 — Simple Linear Regression <span class="pill pill-green">Module 7</span></h3>
       <ul>
         <li>Model: <code>AssetReturn = α + β × BenchmarkReturn + ε</code>. Report α, β, R²; check residuals; explain β (sensitivity).</li>
-        <li><em>Benchmark examples:</em> <code>^GSPC</code>, <code>^NDX</code>, <code>^STI</code>, <code>ES=F</code>, <code>NQ=F</code>.</li>
+        <li><em>Benchmark examples:</em> <code>SPY</code>, <code>QQQ</code>.</li>
       </ul>
 
       <h3>Task 4 — Multiple Regression (REQUIRES 1–2 macro drivers) <span class="pill pill-green">Modules 7–8</span></h3>
@@ -425,11 +427,103 @@ print("Accuracy:", round(float(acc),3))</code></pre>
         <li>Task 2: stacked bar or mosaic plot</li>
         <li>Task 3: scatter with fitted line + residual plot</li>
         <li>Task 4: coefficient table/plot + residual diagnostics</li>
-      <li>Task 5: scatter with quadratic fitted curve</li>
-        <li>Task 6: small confusion matrix table (or bar of correct vs incorrect)</li>
       </ul>
       <p class="muted">Always label axes/legends with tickers, units, and date range.</p>
     </section>
+
+    
+    <section id="delivery-template" class="card">
+      <h2>Delivery Template (copy into a Word file)</h2>
+      <p>Use the following outline verbatim in your Word document. Keep the headings and order. Replace <em>ALL CAPS</em> placeholders with your details. Submit the completed Word file to Blackboard.</p>
+      <pre><code>Title: CP2403/CP3413 — Assignment Part 2 (Portfolio Analytics Edition)
+
+STUDENT NAME: FIRSTNAME LASTNAME
+STUDENT ID: XXXXXXXXX
+PRACTICAL GROUP: A / B / C
+DATE: YYYY-MM-DD
+
+1. CHOICES &amp; RATIONALE
+1.1 Assets (1–3): TICKER1, TICKER2, ...
+    Rationale (1–2 sentences): ...
+1.2 Benchmark (ETF): SPY / QQQ / IWM
+    Rationale (1 sentence): ...
+
+2. DATA ACQUISITION &amp; HYGIENE
+2.1 Source &amp; Window: Google Sheets / yfinance, ~36 months ending TODAY
+2.2 Cleaning Steps: aligned trading days, removed NAs, outliers handling (if any)
+2.3 Files Provided: prices CSV(s) attached (filenames)
+
+3. TASK 1 — ANOVA (Day-of-Week / Regime / Vol-terciles)
+3.1 Hypotheses (H0/H1): ...
+3.2 Method &amp; Diagnostics (1–2 lines): ...
+3.3 Results (F, p-value): ...
+3.4 Investor Takeaway (1 paragraph): ...
+
+4. TASK 2 — Chi‑Square (Independence)
+4.1 Table (Up/Down vs Factor): (paste table or screenshot)
+4.2 Result (χ², p-value): ...
+4.3 Interpretation (1–2 lines): ...
+
+5. TASK 3 — Simple Linear Regression
+5.1 Model: AssetReturn = α + β × BenchmarkReturn + ε
+5.2 Results (α, β, R²): ...
+5.3 Diagnostic (1 plot + 1 sentence): ...
+5.4 Interpretation for PM (1–2 lines): ...
+
+6. TASK 4 — Multiple Regression (with 1–2 macro drivers)
+6.1 Predictors used: Benchmark + MACRO1 (+ MACRO2)
+6.2 Model Comparison (≥3 specs): brief table with Adj-R² / AIC
+6.3 Chosen Model &amp; Why: ...
+6.4 Manager Memo (3–4 bullets): ...
+
+7.  TASK 5 — Polynomial Regression (degree 2)
+7.1 Why quadratic is plausible (1–2 lines): ...
+7.2 Results (βs, Adj‑R²/AIC) + fitted curve screenshot: ...
+7.3 Takeaway (1–2 lines): ...
+
+8.  TASK 6 — Logistic Regression (Up vs Down)
+8.1 Predictors: Lag1 (+ optional macro)
+8.2 Results: coefficients, confusion matrix (2×2), accuracy
+8.3 Takeaway (1–2 lines): ...
+
+9. VISUALS
+9.1 T1 figure(s): ...
+9.2 T2 figure(s): ...
+9.3 T3 figure(s): ...
+9.4 T4 figure(s): ...
+9.5 T5/T6: ...
+
+10. REPRODUCIBILITY CHECKLIST
+- I included the CSV(s) used and named files per convention.
+- All charts label axes/units/date range.
+- I answered Q1–Q14 (and Q15–Q18 if applicable) clearly.
+- I stated any assumptions or limitations briefly.
+
+APPENDIX A — Key Tables/Printouts
+APPENDIX B — Code snippets (optional)</code></pre>
+
+      <h3>File Naming (enforce exactly)</h3>
+      <ul>
+        <li><strong>Main answers (this template):</strong> <code>task-answers-FirstNameLastName-StudentID.docx</code></li>
+        <li><strong>Task 1:</strong> <code>task1-ANOVA-FirstNameLastName-StudentID.docx</code></li>
+        <li><strong>Task 2:</strong> <code>task2-ChiSquare-FirstNameLastName-StudentID.docx</code></li>
+        <li><strong>Task 3:</strong> <code>task3-LinearReg-FirstNameLastName-StudentID.docx</code></li>
+        <li><strong>Task 4:</strong> <code>task4-MultipleReg-FirstNameLastName-StudentID.docx</code></li>
+        <li><strong>Task 5 :</strong> <code>task5-PolynomialReg-FirstNameLastName-StudentID.docx</code></li>
+        <li><strong>Task 6 :</strong> <code>task6-LogisticReg-FirstNameLastName-StudentID.docx</code></li>
+      </ul>
+
+      <div class="callout">
+        <strong>Grading Alignment (what markers look for)</strong>
+        <ul>
+          <li>Correctness of method &amp; results reported for each task.</li>
+          <li>Clarity: concise 1–2 line interpretations; manager memo quality.</li>
+          <li>Reproducibility: CSV(s) provided, naming followed, charts labelled.</li>
+          <li>Professionalism: formatting consistent with this template.</li>
+        </ul>
+      </div>
+    </section>
+
 
     <section id="submission" class="card">
       <h2>Submission &amp; Naming</h2>
@@ -485,7 +579,6 @@ print("Accuracy:", round(float(acc),3))</code></pre>
       <h4>Copy‑ready code snippets</h4>
       </section>
 
-
     <section class="card">
       <p><em>Reminder:</em> Examples on this page are only examples. You may use them or others — just justify your choices briefly.</p>
     </section>
@@ -494,7 +587,6 @@ print("Accuracy:", round(float(acc),3))</code></pre>
 <footer class="card" style="margin-top:20px;">
   <p>&copy; 2025 Professor Dr. Tan. All rights reserved.</p>
 </footer>
-
 
     <section id="bonus" class="card">
       <h2>Bonus Exploration (Optional, up to +5 pts)</h2>
